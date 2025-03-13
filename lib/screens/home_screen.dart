@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 import '../widgets/menu_card.dart';
 import '../widgets/status_item.dart';
+import '../services/auth_service.dart'; // Import the auth service
 
 class HomeScreen extends StatefulWidget {
   static const String routeName = '/home';
@@ -14,6 +15,120 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _userName = 'User';
+  String _userRole = 'Safety Officer';
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // Load user data from AuthService
+  Future<void> _loadUserData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userData = await AuthService.getCurrentUser();
+      setState(() {
+        _userName = userData['userName'] ?? 'User';
+        _userRole = userData['userRole'] ?? 'Safety Officer';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error loading user data: $e');
+    }
+  }
+
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('CANCEL'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                _logout();
+              },
+              child: const Text('LOGOUT'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _logout() async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+
+    try {
+      // Call logout method from AuthService
+      final success = await AuthService.logout();
+
+      // Close loading indicator
+      Navigator.of(context).pop();
+
+      if (success) {
+        // Navigate to login screen
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/login',
+          (Route<dynamic> route) => false,
+        );
+
+        // Show confirmation message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You have been logged out successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to logout. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading indicator
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error during logout: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,7 +170,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 150,
                           width: 150,
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(26),
+                            color: Colors.white
+                                .withAlpha(26), // 0.1 opacity (26/255)
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -67,7 +183,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 100,
                           width: 100,
                           decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(26),
+                            color: Colors.white
+                                .withAlpha(26), // 0.1 opacity (26/255)
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -79,7 +196,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Icon(
                             Icons.shield,
                             size: 40, // Reduced size
-                            color: Colors.white.withAlpha(179),
+                            color: Colors.white
+                                .withAlpha(179), // 0.7 opacity (179/255)
                           ),
                         ),
                       ),
@@ -97,13 +215,39 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-                IconButton(
+                PopupMenuButton<String>(
                   icon: const Icon(Icons.person, color: Colors.white),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Profile coming soon!')),
-                    );
+                  onSelected: (value) {
+                    if (value == 'profile') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Profile coming soon!')),
+                      );
+                    } else if (value == 'logout') {
+                      _showLogoutDialog();
+                    }
                   },
+                  itemBuilder: (BuildContext context) => [
+                    const PopupMenuItem<String>(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          Icon(Icons.person_outline),
+                          SizedBox(width: 8),
+                          Text('Profile'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout),
+                          SizedBox(width: 8),
+                          Text('Logout'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -131,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 CircleAvatar(
                                   backgroundColor: Theme.of(context)
                                       .primaryColor
-                                      .withAlpha(51),
+                                      .withAlpha(51), // 0.2 opacity (51/255)
                                   radius: 24,
                                   child: Icon(
                                     Icons.person,
@@ -145,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Welcome, User',
+                                        'Welcome, $_userName',
                                         style: Theme.of(context)
                                             .textTheme
                                             .displayMedium,
@@ -153,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Safety Officer',
+                                        _userRole,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium,

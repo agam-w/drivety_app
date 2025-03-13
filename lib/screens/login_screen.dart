@@ -3,6 +3,7 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../utils/validators.dart';
 import '../utils/constants.dart';
+import '../services/auth_service.dart'; // Import the auth service
 import 'home_screen.dart';
 import 'register_screen.dart';
 
@@ -22,6 +23,21 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if user is already logged in
+    _checkLoginStatus();
+  }
+
+  // Check if user is already logged in and redirect to home screen
+  Future<void> _checkLoginStatus() async {
+    final isLoggedIn = await AuthService.isLoggedIn();
+    if (isLoggedIn && mounted) {
+      Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+    }
+  }
 
   @override
   void dispose() {
@@ -50,21 +66,50 @@ class _LoginScreenState extends State<LoginScreen> {
       await Future.delayed(const Duration(seconds: 2));
 
       // Hardcoded credentials for demo
-      final email = _emailController.text.trim();
-      final password = _passwordController.text;
+      try {
+        // Get user input
+        final email = _emailController.text.trim();
+        final password = _passwordController.text;
 
-      if (email == Constants.demoEmail && password == Constants.demoPassword) {
-        // Navigate to home screen on successful login
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+        // Validate against hardcoded credentials for demo
+        if (email == Constants.demoEmail &&
+            password == Constants.demoPassword) {
+          // Mock user data - in a real app this would come from your backend
+          final mockToken =
+              'mock_auth_token_${DateTime.now().millisecondsSinceEpoch}';
+          final mockUserId = 'user_123';
+          final mockUserName = 'Demo User';
+          final mockUserRole = 'Safety Officer';
+
+          // Save authentication data
+          final success = await AuthService.login(
+              mockToken, mockUserId, mockUserName, mockUserRole);
+
+          if (success && mounted) {
+            // Navigate to home screen on successful login
+            Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+          } else {
+            throw Exception('Failed to save authentication data');
+          }
+        } else {
+          // Show error message for invalid credentials
+          setState(() {
+            _errorMessage =
+                'Invalid email or password. Try using ${Constants.demoEmail} / ${Constants.demoPassword}';
+          });
         }
-      } else {
-        // Show error message
+      } catch (e) {
+        // Handle any errors during login
         setState(() {
-          _isLoading = false;
-          _errorMessage =
-              'Invalid email or password. Try using ${Constants.demoEmail} / ${Constants.demoPassword}';
+          _errorMessage = 'Login failed: ${e.toString()}';
         });
+      } finally {
+        // Reset loading state if still mounted
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
