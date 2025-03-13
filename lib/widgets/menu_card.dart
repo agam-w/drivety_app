@@ -28,7 +28,7 @@ class MenuCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10), // Reduced padding
                 decoration: BoxDecoration(
-                  color: option.color.withOpacity(0.1),
+                  color: option.color.withAlpha(26),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(

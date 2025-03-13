@@ -1,3 +1,4 @@
+import 'package:drivety_app/models/status_data.dart';
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 import '../widgets/menu_card.dart';
@@ -41,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       end: Alignment.bottomRight,
                       colors: [
                         Theme.of(context).primaryColor,
-                        Theme.of(context).primaryColor.withOpacity(0.8),
+                        Theme.of(context).primaryColor.withAlpha(204),
                       ],
                     ),
                   ),
@@ -54,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 150,
                           width: 150,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withAlpha(26),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -66,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 100,
                           width: 100,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withAlpha(26),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -78,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Icon(
                             Icons.shield,
                             size: 40, // Reduced size
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withAlpha(179),
                           ),
                         ),
                       ),
@@ -130,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 CircleAvatar(
                                   backgroundColor: Theme.of(context)
                                       .primaryColor
-                                      .withOpacity(0.2),
+                                      .withAlpha(51),
                                   radius: 24,
                                   child: Icon(
                                     Icons.person,
@@ -244,25 +245,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<Widget> _buildStatusItems() {
-    return [
-      StatusItem(
-        icon: Icons.people,
-        label: 'Staff',
-        value: '35/40',
-        color: Colors.blue,
-      ),
-      StatusItem(
-        icon: Icons.warning,
-        label: 'Incidents',
-        value: '0',
-        color: Colors.green,
-      ),
-      StatusItem(
-        icon: Icons.check_circle,
-        label: 'Checks',
-        value: '12/20',
-        color: Colors.orange,
-      ),
-    ];
+    return StatusData.items
+        .map((item) => Expanded(
+              child: StatusItem(
+                icon: item['icon'],
+                label: item['label'],
+                value: item['value'],
+                color: item['color'],
+              ),
+            ))
+        .toList();
   }
 }

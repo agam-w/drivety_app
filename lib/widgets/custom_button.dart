@@ -25,8 +25,8 @@ class CustomButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: textColor,
-          disabledBackgroundColor: backgroundColor?.withOpacity(0.7),
-          disabledForegroundColor: textColor?.withOpacity(0.7),
+          disabledBackgroundColor: backgroundColor?.withAlpha(179),
+          disabledForegroundColor: textColor?.withAlpha(179),
         ),
         child: isLoading
             ? const SizedBox(
